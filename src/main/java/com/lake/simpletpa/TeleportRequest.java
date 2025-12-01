@@ -22,8 +22,9 @@ public class TeleportRequest {
         this.sender = sender;
         this.target = target;
         this.type = type;
-        // Request expires in 2 minutes (120 seconds)
-        this.expirationTime = System.currentTimeMillis() + (120 * 1000);
+        // Request expires based on configuration
+        int expirationSeconds = TpaConfig.GENERAL.requestExpiration.get();
+        this.expirationTime = System.currentTimeMillis() + (expirationSeconds * 1000L);
     }
 
     public UUID getSender() {

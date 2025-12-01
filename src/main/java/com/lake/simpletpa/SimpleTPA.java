@@ -5,16 +5,21 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 
 /**
  * Main mod class for SimpleTPA.
- * Server-side only teleport request system.
+ * Server-side only teleport request system with configuration and warmup.
  */
 @Mod("simpletpa")
 public class SimpleTPA {
 
     public SimpleTPA() {
+        // Register configuration
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, TpaConfig.SPEC, "simpletpa-server.toml");
+
         // Register this class to the event bus
         MinecraftForge.EVENT_BUS.register(this);
     }
@@ -28,7 +33,8 @@ public class SimpleTPA {
     }
 
     /**
-     * Server tick event handler for cleaning up expired requests.
+     * Server tick event handler for cleaning up expired requests and checking
+     * warmups.
      * Checks once per second (every 20 ticks) to avoid performance impact.
      */
     @SubscribeEvent
@@ -40,7 +46,11 @@ public class SimpleTPA {
 
         // Only check once per second (20 ticks per second)
         if (event.getServer().getTickCount() % 20 == 0) {
+            // Clean expired teleport requests
             TpaManager.getInstance().cleanExpired(event.getServer());
+
+            // Check warmup tasks (movement detection and completion)
+            WarmupManager.getInstance().checkWarmups(event.getServer());
         }
     }
 }

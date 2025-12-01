@@ -1,6 +1,6 @@
 package com.lake.simpletpa;
 
-import net.minecraft.network.chat.Component;
+import com.lake.simpletpa.util.MessageUtils;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 
@@ -17,9 +17,11 @@ import java.util.List;
 public class TpaManager {
     private static TpaManager instance;
     private final Map<UUID, TeleportRequest> pendingRequests;
+    private final Map<UUID, Long> cooldowns;
 
     private TpaManager() {
         this.pendingRequests = new HashMap<>();
+        this.cooldowns = new HashMap<>();
     }
 
     /**
@@ -81,11 +83,11 @@ public class TpaManager {
                 ServerPlayer target = server.getPlayerList().getPlayer(request.getTarget());
 
                 if (sender != null) {
-                    sender.sendSystemMessage(Component.literal("§cYour teleport request has expired."));
+                    MessageUtils.send(sender, TpaConfig.MESSAGES.requestExpired.get());
                 }
 
                 if (target != null) {
-                    target.sendSystemMessage(Component.literal("§cThe teleport request has expired."));
+                    MessageUtils.send(target, TpaConfig.MESSAGES.requestExpired.get());
                 }
             }
         }
@@ -94,5 +96,48 @@ public class TpaManager {
         for (UUID uuid : toRemove) {
             pendingRequests.remove(uuid);
         }
+    }
+
+    /**
+     * Sets a cooldown for a player.
+     * 
+     * @param playerUuid UUID of the player
+     */
+    public void setCooldown(UUID playerUuid) {
+        cooldowns.put(playerUuid, System.currentTimeMillis());
+    }
+
+    /**
+     * Checks if a player is on cooldown.
+     * 
+     * @param playerUuid UUID of the player
+     * @return true if player is on cooldown
+     */
+    public boolean isOnCooldown(UUID playerUuid) {
+        return getRemainingCooldown(playerUuid) > 0;
+    }
+
+    /**
+     * Gets the remaining cooldown time for a player in seconds.
+     * 
+     * @param playerUuid UUID of the player
+     * @return Remaining cooldown in seconds, or 0 if no cooldown
+     */
+    public long getRemainingCooldown(UUID playerUuid) {
+        if (!cooldowns.containsKey(playerUuid)) {
+            return 0;
+        }
+
+        long lastUse = cooldowns.get(playerUuid);
+        long cooldownMs = TpaConfig.GENERAL.cooldown.get() * 1000L;
+        long elapsed = System.currentTimeMillis() - lastUse;
+        long remaining = cooldownMs - elapsed;
+
+        if (remaining <= 0) {
+            cooldowns.remove(playerUuid);
+            return 0;
+        }
+
+        return (remaining + 999) / 1000; // Round up to nearest second
     }
 }
