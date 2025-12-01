@@ -5,7 +5,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +20,12 @@ public class TpaManager {
     private static TpaManager instance;
     private final Map<UUID, TeleportRequest> pendingRequests;
     private final Map<UUID, Long> cooldowns;
+    private final Set<UUID> ignoringPlayers;
 
     private TpaManager() {
         this.pendingRequests = new HashMap<>();
         this.cooldowns = new HashMap<>();
+        this.ignoringPlayers = new HashSet<>();
     }
 
     /**
@@ -139,5 +143,31 @@ public class TpaManager {
         }
 
         return (remaining + 999) / 1000; // Round up to nearest second
+    }
+
+    /**
+     * Toggles the ignore status for a player.
+     * 
+     * @param playerUuid UUID of the player
+     * @return true if now ignoring, false if now accepting
+     */
+    public boolean toggleIgnore(UUID playerUuid) {
+        if (ignoringPlayers.contains(playerUuid)) {
+            ignoringPlayers.remove(playerUuid);
+            return false; // Now accepting
+        } else {
+            ignoringPlayers.add(playerUuid);
+            return true; // Now ignoring
+        }
+    }
+
+    /**
+     * Checks if a player is ignoring teleport requests.
+     * 
+     * @param playerUuid UUID of the player
+     * @return true if player is ignoring requests
+     */
+    public boolean isIgnoring(UUID playerUuid) {
+        return ignoringPlayers.contains(playerUuid);
     }
 }

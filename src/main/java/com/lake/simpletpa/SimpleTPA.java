@@ -17,8 +17,8 @@ import net.minecraftforge.fml.config.ModConfig;
 public class SimpleTPA {
 
     public SimpleTPA() {
-        // Register configuration
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, TpaConfig.SPEC, "simpletpa-server.toml");
+        // Register configuration (COMMON type for global settings)
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, TpaConfig.SPEC, "simpletpa-common.toml");
 
         // Register this class to the event bus
         MinecraftForge.EVENT_BUS.register(this);

@@ -33,7 +33,9 @@ public class TpaCommands {
                 dispatcher.register(
                                 Commands.literal("tpa")
                                                 .then(Commands.argument("player", EntityArgument.player())
-                                                                .executes(TpaCommands::executeTpa)));
+                                                                .executes(TpaCommands::executeTpa))
+                                                .then(Commands.literal("toggle")
+                                                                .executes(TpaCommands::executeTpaToggle)));
 
                 // /tpahere <player>
                 dispatcher.register(
@@ -65,8 +67,15 @@ public class TpaCommands {
                         return 0;
                 }
 
-                // Check cooldown
                 TpaManager manager = TpaManager.getInstance();
+
+                // Check if target is ignoring requests
+                if (manager.isIgnoring(target.getUUID())) {
+                        MessageUtils.send(sender, TpaConfig.MESSAGES.targetIgnoring.get());
+                        return 0;
+                }
+
+                // Check cooldown
                 if (manager.isOnCooldown(sender.getUUID())) {
                         long remaining = manager.getRemainingCooldown(sender.getUUID());
                         MessageUtils.send(sender, TpaConfig.MESSAGES.onCooldown.get(), remaining);
@@ -127,8 +136,15 @@ public class TpaCommands {
                         return 0;
                 }
 
-                // Check cooldown
                 TpaManager manager = TpaManager.getInstance();
+
+                // Check if target is ignoring requests
+                if (manager.isIgnoring(target.getUUID())) {
+                        MessageUtils.send(sender, TpaConfig.MESSAGES.targetIgnoring.get());
+                        return 0;
+                }
+
+                // Check cooldown
                 if (manager.isOnCooldown(sender.getUUID())) {
                         long remaining = manager.getRemainingCooldown(sender.getUUID());
                         MessageUtils.send(sender, TpaConfig.MESSAGES.onCooldown.get(), remaining);
@@ -274,6 +290,24 @@ public class TpaCommands {
 
                 // Remove the request
                 TpaManager.getInstance().removeRequest(executor.getUUID());
+
+                return 1;
+        }
+
+        /**
+         * Executes /tpa toggle command - toggles ignoring teleport requests.
+         */
+        private static int executeTpaToggle(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+                ServerPlayer player = context.getSource().getPlayerOrException();
+                TpaManager manager = TpaManager.getInstance();
+
+                boolean nowIgnoring = manager.toggleIgnore(player.getUUID());
+
+                if (nowIgnoring) {
+                        MessageUtils.send(player, TpaConfig.MESSAGES.toggleEnabled.get());
+                } else {
+                        MessageUtils.send(player, TpaConfig.MESSAGES.toggleDisabled.get());
+                }
 
                 return 1;
         }
