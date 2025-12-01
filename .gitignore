@@ -1,0 +1,21 @@
+# Archivos de compilación de Java
+build/
+bin/
+out/
+.gradle/
+
+# Archivos temporales de ejecución (Mundos de prueba, logs)
+run/
+run_server/
+run_client/
+logs/
+crash-reports/
+debug/
+
+# Archivos de configuración del editor
+.idea/
+.vscode/
+.settings/
+.classpath
+.project
+.DS_Store
